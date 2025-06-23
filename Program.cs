@@ -5,18 +5,17 @@ using Microsoft.AspNetCore.Authentication.Google;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Evitar null en la cadena de conexión
-var cadenaSql = builder.Configuration.GetConnectionString("CadenaSQL")
-    ?? throw new InvalidOperationException("Cadena de conexión 'CadenaSQL' no encontrada.");
+// Leer variables de entorno
+var cadenaSql = Environment.GetEnvironmentVariable("CADENA_SQL")
+    ?? throw new InvalidOperationException("Falta CADENA_SQL en variables de entorno");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(cadenaSql);
 });
 
-// Autenticación con cookies y Google
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -25,15 +24,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     })
     .AddGoogle(googleOptions =>
     {
-        googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"]
-            ?? throw new InvalidOperationException("Falta 'Authentication:Google:ClientId' en appsettings.json");
-        googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
-            ?? throw new InvalidOperationException("Falta 'Authentication:Google:ClientSecret' en appsettings.json");
+        googleOptions.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+            ?? throw new InvalidOperationException("Falta GOOGLE_CLIENT_ID en variables de entorno");
+        googleOptions.ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
+            ?? throw new InvalidOperationException("Falta GOOGLE_CLIENT_SECRET en variables de entorno");
     });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
