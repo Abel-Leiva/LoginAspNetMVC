@@ -11,8 +11,8 @@ using PracticaLogin.Data;
 namespace PracticaLogin.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250620040658_InitialCreate2")]
-    partial class InitialCreate2
+    [Migration("20250622181830_validaciones")]
+    partial class validaciones
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,8 +34,8 @@ namespace PracticaLogin.Migrations
 
                     b.Property<string>("Clave")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Correo")
                         .IsRequired()

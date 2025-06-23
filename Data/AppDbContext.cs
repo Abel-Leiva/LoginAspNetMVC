@@ -21,7 +21,8 @@ namespace PracticaLogin.Data
 
     tb.Property(col => col.NombreCompleto).HasMaxLength(50);
     tb.Property(col => col.Correo).HasMaxLength(50);
-    tb.Property(col => col.Clave).HasMaxLength(50);
+    tb.Property(col => col.Clave).HasMaxLength(150);
+    tb.HasIndex(col => col.Correo).IsUnique();
 
 });
             modelBuilder.Entity<Usuario>().ToTable("Usuario");

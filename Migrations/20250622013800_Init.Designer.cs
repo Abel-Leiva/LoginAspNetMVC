@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PracticaLogin.Data;
 
@@ -10,9 +11,11 @@ using PracticaLogin.Data;
 namespace PracticaLogin.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250622013800_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,8 +34,8 @@ namespace PracticaLogin.Migrations
 
                     b.Property<string>("Clave")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Correo")
                         .IsRequired()
@@ -45,9 +48,6 @@ namespace PracticaLogin.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("IdUsuario");
-
-                    b.HasIndex("Correo")
-                        .IsUnique();
 
                     b.ToTable("Usuario", (string)null);
                 });

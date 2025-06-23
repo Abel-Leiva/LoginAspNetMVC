@@ -11,8 +11,8 @@ using PracticaLogin.Data;
 namespace PracticaLogin.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250620040436_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250622014150_cambiolengthclave")]
+    partial class cambiolengthclave
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

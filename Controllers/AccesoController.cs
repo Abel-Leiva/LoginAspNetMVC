@@ -3,10 +3,11 @@ using PracticaLogin.Data;
 using PracticaLogin.Models;
 using Microsoft.EntityFrameworkCore;
 using PracticaLogin.ViewModels;
-using System.Threading.Tasks;
+
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 
 namespace MyApp.Namespace
 {
@@ -17,72 +18,168 @@ namespace MyApp.Namespace
         {
             _appDbContext = appDbContext;
         }
+
         [HttpGet]
         public ActionResult Registrarse()
         {
             if (User.Identity!.IsAuthenticated) return RedirectToAction("Index", "Home");
             return View();
         }
+
         [HttpPost]
         public async Task<ActionResult> Registrarse(UsuarioVM model)
         {
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+
             if (model.Clave != model.ConfirmarClave)
             {
-                ViewData["Mensaje"] = "Las contraseñas no coinciden";
-                return View();
+                ModelState.AddModelError("ConfirmarClave", "Las contraseñas no coinciden");
+                return View(model);
             }
+
+
+            //
+            var correoExiste = await _appDbContext.Usuarios
+                .AnyAsync(u => u.Correo == model.Correo);
+            if (correoExiste)
+            {
+                ModelState.AddModelError("Correo", "Ya existe un usuario con ese correo");
+                return View(model);
+            }
+
+            //
+            var hasher = new PasswordHasher<object>();
+            var hashedPassword = hasher.HashPassword(null, model.Clave);
+
 
             var usuario = new Usuario()
             {
                 NombreCompleto = model.NombreCompleto,
                 Correo = model.Correo,
-                Clave = model.Clave,
-
+                Clave = hashedPassword
             };
+
+
             await _appDbContext.Usuarios.AddAsync(usuario);
             await _appDbContext.SaveChangesAsync();
-            if (usuario.IdUsuario != 0) return RedirectToAction("Login", "Acceso");
-            ViewData["Mensaje"] = "Error al crear el usuario";
-            return View();
+
+            return RedirectToAction("Login", "Acceso");
         }
+
+
+
         [HttpGet]
         public async Task<ActionResult> Login()
-
         {
             if (User.Identity!.IsAuthenticated) return RedirectToAction("Index", "Home");
-
-
-
-
-
             return View();
         }
+
         [HttpPost]
         public async Task<ActionResult> Login(LoginVM model)
         {
-            Usuario? usuario_enconttrado = await _appDbContext.Usuarios.
-            Where(u => u.Correo == model.Correo && u.Clave == model.Clave).FirstOrDefaultAsync();
-            if (usuario_enconttrado == null)
+            if (!ModelState.IsValid)
             {
-                ViewData["Mensaje"] = "No se encontro coincidencia";
-                return View();
+                return View(model);
             }
-            List<Claim> claims = new List<Claim>()
+
+            var usuario = await _appDbContext.Usuarios
+                .Where(u => u.Correo == model.Correo)
+                .FirstOrDefaultAsync();
+
+            if (usuario == null)
             {
-                new Claim(ClaimTypes.Name, usuario_enconttrado.NombreCompleto)
-            };
-            ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            AuthenticationProperties properties = new AuthenticationProperties()
+                ViewData["Mensaje"] = "No se encontró el usuario";
+                return View(model);
+            }
+
+            var hasher = new PasswordHasher<object>();
+            var result = hasher.VerifyHashedPassword(null, usuario.Clave, model.Clave);
+
+            if (result != PasswordVerificationResult.Success)
             {
-                AllowRefresh = true,
+                ViewData["Mensaje"] = "Contraseña incorrecta";
+                return View(model);
+            }
+
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, usuario.NombreCompleto)
+    };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var properties = new AuthenticationProperties
+            {
+                AllowRefresh = true
             };
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity), properties
             );
+
             return RedirectToAction("Index", "Home");
         }
 
+
+        [HttpGet]
+        public IActionResult LoginConGoogle(string returnUrl = "/")
+        {
+            var properties = new AuthenticationProperties { RedirectUri = Url.Action("GoogleResponse", new { returnUrl }) };
+            return Challenge(properties, "Google");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GoogleResponse(string returnUrl = "/")
+        {
+            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var claims = result.Principal.Identities.FirstOrDefault()?.Claims;
+            var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+
+            if (email == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var usuario = await _appDbContext.Usuarios.FirstOrDefaultAsync(u => u.Correo == email);
+
+            if (usuario == null)
+            {
+                usuario = new Usuario()
+                {
+                    NombreCompleto = name ?? email,
+                    Correo = email,
+                    Clave = "" // o null, según modelo y base de datos
+                };
+                _appDbContext.Usuarios.Add(usuario);
+                await _appDbContext.SaveChangesAsync();
+            }
+
+            var appClaims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.Name, usuario.NombreCompleto),
+                new Claim(ClaimTypes.Email, usuario.Correo)
+            };
+
+            var identity = new ClaimsIdentity(appClaims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            return LocalRedirect(returnUrl);
+        }
     }
 }
+

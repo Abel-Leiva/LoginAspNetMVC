@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PracticaLogin.Data;
 
@@ -10,9 +11,11 @@ using PracticaLogin.Data;
 namespace PracticaLogin.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250622014219_cambiolengthclave2")]
+    partial class cambiolengthclave2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,9 +48,6 @@ namespace PracticaLogin.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("IdUsuario");
-
-                    b.HasIndex("Correo")
-                        .IsUnique();
 
                     b.ToTable("Usuario", (string)null);
                 });

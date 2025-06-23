@@ -4,10 +4,23 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    @if(User.Identity!.IsAuthenticated){
-    <h1 class="display-4">
-        Bienvenido 
-        @User.Claims.Where(c=>c.Type==ClaimTypes.Name).Select(c=>c.Value).SingleOrDefault()</h1>}
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mt-5 mx-auto" style="max-width: 700px;">
+    <h1 class="display-4 text-primary fw-bold">
+        ¡Hola, @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value!
+    </h1>
+    <p class="lead mb-4">
+        Muchas gracias por tomarte el tiempo de probar este proyecto.
+        Lo desarrollé usando <strong>ASP.NET Core MVC</strong>, con autenticación por cookies, integración con Google y Entity Framework Core para la base de datos SQL Server.
+    </p>
+    <p class="mb-4 fs-5">
+        La idea principal fue aprender a manejar sistemas de login seguros, validar datos correctamente y usar autenticación externa.
+        Además, lo desplegué en <strong>Microsoft Azure</strong>, para familiarizarme con el despliegue en la nube.
+    </p>
+    <p class="fs-5">
+        Si querés ver más proyectos o contactarme, te dejo mis links:
+        <br />
+        <a href="https://github.com/Abel-Leiva" target="_blank" rel="noopener noreferrer" class="text-primary fw-semibold me-3">GitHub</a>
+        <a href="https://www.linkedin.com/in/ignacio-leiva/" target="_blank" rel="noopener noreferrer" class="text-primary fw-semibold me-3">LinkedIn</a>
+        <a href="https://abel-ignacio-dev.vercel.app/" target="_blank" rel="noopener noreferrer" class="text-primary fw-semibold">Portfolio</a>
+    </p>
 </div>
